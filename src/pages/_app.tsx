@@ -9,12 +9,12 @@ import { mantineVioletColors } from "~/utils/styles";
 
 const theme = createTheme({
   /** Put your mantine theme override here */
-  colors: {mantineVioletColors}
+  colors: { mantineVioletColors },
 });
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
-    <MantineProvider theme={theme} defaultColorScheme="dark">
+    <MantineProvider theme={theme} defaultColorScheme="light">
       <Component {...pageProps} />
     </MantineProvider>
   );
