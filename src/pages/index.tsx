@@ -1,3 +1,4 @@
+import { Button } from "@mantine/core";
 import Head from "next/head";
 import Link from "next/link";
 
