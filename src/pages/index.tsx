@@ -1,22 +1,38 @@
 import { Anchor, Container, Text, Title } from "@mantine/core";
 import Head from "next/head";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { ForecastGrid } from "~/components/forecast-grid";
 import { SeachInput } from "~/components/search-input";
 
 import { api } from "~/utils/api";
+import {
+  type WeatherCondition,
+  weatherConditions,
+} from "~/utils/weather-conditions";
 
 export default function Home() {
-  const [location, setLocation] = useState<string>("");
-  // const locations = api.weather.getLocations.useQuery(
-  //   {
-  //     location,
-  //   },
-  //   {
-  //     refetchOnWindowFocus: false,
-  //   },
-  // );
+  const [latitude, setLatitude] = useState<string>();
+  const [longitude, setLongitude] = useState<string>();
 
-  // console.log(locations.data);
+  const forecast = api.weather.getForecast.useQuery(
+    {
+      latitude,
+      longitude,
+      days: 7,
+    },
+    {
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  const forecastEmojies: (WeatherCondition | undefined)[] | undefined =
+    useMemo(() => {
+      if (forecast.isSuccess) {
+        return forecast.data?.daily.weather_code.map((code) => {
+          return weatherConditions.find((condition) => condition.code === code);
+        });
+      }
+    }, [forecast.data?.daily.weather_code]);
 
   return (
     <>
@@ -35,12 +51,10 @@ export default function Home() {
           </Text>
 
           <Container p={30} size={"xs"}>
-            {/* onSearch={value} */}
             <SeachInput
-              searchHandler={(value) => {
-                if (value.length > 2) {
-                  setLocation(value);
-                }
+              searchHandler={(longitude, latitude) => {
+                setLongitude(longitude);
+                setLatitude(latitude);
               }}
             />
             <Anchor
@@ -53,8 +67,8 @@ export default function Home() {
               Weather data by Open-Meteo.com
             </Anchor>
           </Container>
-          {/* {weather.data ? weather.data.greeting : "Loading tRPC query..."} */}
         </Container>
+        {forecastEmojies && <ForecastGrid forecast={forecastEmojies} />}
       </main>
     </>
   );
