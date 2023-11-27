@@ -1,6 +1,4 @@
 import {
-  TextInput,
-  type TextInputProps,
   ActionIcon,
   useMantineTheme,
   Autocomplete,
@@ -12,10 +10,19 @@ import { useState } from "react";
 import { api } from "~/utils/api";
 
 export function SeachInput(
-  props: AutocompleteProps & { searchHandler: (location: string) => void },
+  props: AutocompleteProps & {
+    searchHandler: (
+      latitude: string | undefined,
+      longitude: string | undefined,
+    ) => void;
+  },
 ) {
+  const { searchHandler, ...SearchInputProps } = props;
   const theme = useMantineTheme();
-  const [value, setValue] = useDebouncedState<string>("", 350);
+  const [value, setValue] = useDebouncedState<string>("", 200);
+  const [latitude, setLatitude] = useState<string>();
+  const [longitude, setLongitude] = useState<string>();
+
   const locations = api.weather.getLocations.useQuery(
     {
       location: value,
@@ -34,9 +41,9 @@ export function SeachInput(
 
   const handleOptionSubmit = (value: string) => {
     const [latitude, longitude] = value.split(";");
+    setLatitude(latitude);
+    setLongitude(longitude);
   };
-
-  console.log(value);
 
   return (
     <Autocomplete
@@ -51,7 +58,7 @@ export function SeachInput(
           radius="xl"
           color={theme.primaryColor}
           variant="filled"
-          onClick={() => props.searchHandler(value)}
+          onClick={() => searchHandler(latitude, longitude)}
         >
           <Search strokeWidth={1.75} />
         </ActionIcon>
@@ -61,7 +68,7 @@ export function SeachInput(
       onChange={setValue}
       data={data}
       onOptionSubmit={handleOptionSubmit}
-      {...props}
+      {...SearchInputProps}
     />
   );
 }
