@@ -19,10 +19,8 @@ export function ForecastGrid(props: {
 
   const items = props.forecast.map((day) => (
     <UnstyledButton key={day?.name} className={classes.item}>
-      <Text>{day?.emoji}</Text>
-      <Text size="xs" mt={7}>
-        {day?.name}
-      </Text>
+      <Text fz="40">{day?.emoji}</Text>
+      <Text size="xs">{day?.name}</Text>
     </UnstyledButton>
   ));
 
