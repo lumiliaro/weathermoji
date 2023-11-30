@@ -11,17 +11,14 @@ import { api } from "~/utils/api";
 
 export function SeachInput(
   props: AutocompleteProps & {
-    searchHandler: (
-      latitude: string | undefined,
-      longitude: string | undefined,
-    ) => void;
+    searchHandler: (latitude: string, longitude: string) => void;
   },
 ) {
   const { searchHandler, ...SearchInputProps } = props;
   const theme = useMantineTheme();
   const [value, setValue] = useDebouncedState<string>("", 200);
-  const [latitude, setLatitude] = useState<string>();
-  const [longitude, setLongitude] = useState<string>();
+  const [latitude, setLatitude] = useState<string>("");
+  const [longitude, setLongitude] = useState<string>("");
 
   const locations = api.weather.getLocations.useQuery(
     {
@@ -32,17 +29,24 @@ export function SeachInput(
     },
   );
 
-  const data = locations.data?.map((location) => {
+  const data = locations.data?.results?.map((location) => {
     return {
-      label: `${location.country}: ${location.name}`,
+      label: `${
+        location.country ?? location.admin1 ?? location.country_code
+      }: ${location.name}`,
       value: `${location.latitude};${location.longitude}`,
     };
   });
 
   const handleOptionSubmit = (value: string) => {
     const [latitude, longitude] = value.split(";");
-    setLatitude(latitude);
-    setLongitude(longitude);
+    if (latitude) {
+      setLatitude(latitude);
+    }
+
+    if (longitude) {
+      setLongitude(longitude);
+    }
   };
 
   return (
@@ -68,6 +72,13 @@ export function SeachInput(
       onChange={setValue}
       data={data}
       onOptionSubmit={handleOptionSubmit}
+      error={
+        locations.isError
+          ? JSON.stringify(
+              locations.error?.data?.zodError?.fieldErrors.location?.at(0),
+            )
+          : undefined
+      }
       {...SearchInputProps}
     />
   );

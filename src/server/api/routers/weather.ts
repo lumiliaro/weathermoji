@@ -4,54 +4,40 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import {
   type OpenMeteoGeoCodingLocation,
   type OpenMeteoGeoCodingForecast,
+  type OpenMeteoGeoCodingLocationResults,
 } from "./types";
 
 export const weatherRouter = createTRPCRouter({
   getLocations: publicProcedure
-    .input(z.object({ location: z.string().trim() }))
+    .input(z.object({ location: z.string().trim().min(3) }))
+    .output(z.custom<OpenMeteoGeoCodingLocation>())
     .query(async ({ input }) => {
-      if (input.location.length < 3) {
-        return;
-      }
-
       const response = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${input.location}&count=5&language=en&format=json`,
       );
       const locations = (await response.json()) as OpenMeteoGeoCodingLocation;
 
-      if (!locations) {
-        return;
-      }
-
-      return locations.results;
+      return locations;
     }),
 
   getForecast: publicProcedure
     .input(
       z.object({
-        latitude: z.string().optional(),
-        longitude: z.string().optional(),
-        days: z.number(),
+        latitude: z.string().trim().min(1),
+        longitude: z.string().trim().min(1),
+        days: z
+          .literal(1)
+          .or(z.literal(3))
+          .or(z.literal(7))
+          .or(z.literal(14))
+          .or(z.literal(16)),
       }),
     )
+    .output(z.custom<OpenMeteoGeoCodingForecast>())
     .query(async ({ input }) => {
-      if (input.latitude === undefined || input.longitude === undefined) {
-        return;
-      }
-
-      if (input.days < 1) {
-        return;
-      }
-
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${input.latitude}&longitude=${input.longitude}&daily=weather_code,precipitation_probability_max&timezone=auto&models=best_match&forecast_days=${input.days}`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${input.latitude}&longitude=${input.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=${input.days}&models=best_match`,
       );
-      const forecast = (await response.json()) as OpenMeteoGeoCodingForecast;
-
-      if (!forecast) {
-        throw new Error("Failed to fetch forecast");
-      }
-
-      return forecast;
+      return (await response.json()) as OpenMeteoGeoCodingForecast;
     }),
 });

@@ -1,44 +1,42 @@
-import {
-  Card,
-  Text,
-  SimpleGrid,
-  UnstyledButton,
-  Anchor,
-  Group,
-} from "@mantine/core";
+import { Card, Text, SimpleGrid, UnstyledButton, Group } from "@mantine/core";
 
 import classes from "./forecast-grid.module.css";
 import { type WeatherCondition } from "~/utils/weather-conditions";
+import OpenMeteoLink from "./open-meteo-link";
+import { type OpenMeteoGeoCodingForecast } from "~/server/api/routers/types";
 
 export function ForecastGrid(props: {
-  forecast: (WeatherCondition | undefined)[] | undefined;
+  forecastEmojies: (WeatherCondition | undefined)[] | undefined;
+  forecast: OpenMeteoGeoCodingForecast | undefined;
 }) {
-  if (!props.forecast) {
+  if (!props.forecastEmojies) {
     return <></>;
   }
 
-  const items = props.forecast.map((day) => (
-    <UnstyledButton key={day?.name} className={classes.item}>
-      <Text fz="40">{day?.emoji}</Text>
-      <Text size="xs">{day?.name}</Text>
+  const items = props.forecastEmojies.map((day, index) => (
+    <UnstyledButton key={index} className={classes.item}>
+      <Text fz="80">{day?.emoji}</Text>
+      <Text size="lg" fw={700}>
+        {index === 0 ? "Today" : index === 1 ? "Tomorrow" : `Day ${index + 1}`}
+      </Text>
+      <Text fz={14} c="dimmed">
+        Low: {props.forecast?.daily.temperature_2m_min[index]}°C | High:{" "}
+        {props.forecast?.daily.temperature_2m_max[index]}°C
+      </Text>
+      <Text fz={12} c="dimmed">
+        {day?.name}
+      </Text>
+      <Text size="xs" c="dimmed"></Text>
     </UnstyledButton>
   ));
 
   return (
-    <Card withBorder radius="md" className={classes.card}>
+    <Card withBorder radius="md" m={"lg"} className={classes.card}>
       <Group justify="space-between">
         <Text className={classes.title}>Forecast</Text>
-
-        <Anchor
-          href="https://open-meteo.com/"
-          fz="10"
-          c="dimmed"
-          style={{ lineHeight: 1 }}
-        >
-          Weather data by Open-Meteo.com
-        </Anchor>
+        <OpenMeteoLink />
       </Group>
-      <SimpleGrid cols={7} mt="md">
+      <SimpleGrid cols={{ base: 1, sm: 3, md: 4, lg: 7 }} mt="md">
         {items}
       </SimpleGrid>
     </Card>
